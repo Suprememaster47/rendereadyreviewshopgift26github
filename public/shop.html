@@ -85,24 +85,28 @@
             </div>
         </nav>
 
-        <!-- ── Sale Countdown Banner ────────────────────────────────────── -->
+        <!-- ── Sale Countdown Banner ─────────────────────────────────────
+             White, transparent-over-Vanta, same height as the marquee below.
+             "SALE ENDS IN" sits to the LEFT of the timer, read left-to-right.
+             Each unit is a black square: white number on top, white HRS/MIN/SEC
+             label directly beneath it, inside that same black box. ── -->
         <div class="sale-timer-banner" id="sale-timer-banner">
             <div class="sale-timer-flash-layer" id="sale-timer-flash-layer"></div>
             <div class="sale-timer-inner">
                 <span class="sale-timer-label">SALE ENDS IN</span>
                 <div class="sale-timer-units">
-                    <div class="sale-timer-group">
-                        <div class="sale-timer-box" id="timer-hrs">04</div>
+                    <div class="sale-timer-box">
+                        <span class="sale-timer-num" id="timer-hrs">04</span>
                         <span class="sale-timer-unit-label">HRS</span>
                     </div>
                     <span class="sale-timer-colon">:</span>
-                    <div class="sale-timer-group">
-                        <div class="sale-timer-box" id="timer-min">00</div>
+                    <div class="sale-timer-box">
+                        <span class="sale-timer-num" id="timer-min">00</span>
                         <span class="sale-timer-unit-label">MIN</span>
                     </div>
                     <span class="sale-timer-colon">:</span>
-                    <div class="sale-timer-group">
-                        <div class="sale-timer-box" id="timer-sec">00</div>
+                    <div class="sale-timer-box">
+                        <span class="sale-timer-num" id="timer-sec">00</span>
                         <span class="sale-timer-unit-label">SEC</span>
                     </div>
                 </div>
@@ -137,7 +141,6 @@
                         <div id="pdp-price" class="price-pill"></div>
                         <div id="variant-area"></div>
 
-                        <!-- NEW: bundle/tier pricing cards (Buy 1 / 2 / 3) -->
                         <div id="tier-pricing-area" class="tier-pricing-area"></div>
 
                         <button onclick="addToCart()" class="add-btn" id="pdp-add-btn">ADD TO CART</button>
