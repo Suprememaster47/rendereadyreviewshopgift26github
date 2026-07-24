@@ -7,7 +7,21 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
 .acme-hidden { display: none !important; }
 
 /* ─── Background & Intro ──────────────────────────────────────────────────── */
-#canvas-container { position: fixed; inset: 0; z-index: -1; background: #000; }
+#canvas-container {
+    position: fixed; inset: 0; z-index: -1; background: #000;
+    transform-origin: center center;
+}
+
+/* Spin reaction triggered on countdown-banner click. Body background is
+   solid black, so any corner exposed mid-rotation reads as seamless. */
+#canvas-container.vanta-spin {
+    animation: vantaSpinAnim 1.3s cubic-bezier(0.65, 0, 0.35, 1);
+}
+@keyframes vantaSpinAnim {
+    0%   { transform: rotate(0deg) scale(1); }
+    45%  { transform: rotate(190deg) scale(1.08); }
+    100% { transform: rotate(360deg) scale(1); }
+}
 
 #intro-view {
     position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column;
@@ -24,10 +38,6 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
 }
 
 .intro-btn:hover { background: #fff; color: #000; box-shadow: 0 0 30px #fff; transform: translate3d(0, -3px, 0); }
-
-/* No sticky-footer flex trick — main content gets an explicit min-height
-   below instead, so the footer only appears after a deliberate scroll,
-   per the requested behavior. */
 
 /* ─── Navigation ─────────────────────────────────────────────────────────── */
 .acme-nav {
@@ -166,17 +176,24 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
 .acme-search-input { width: 100%; padding: 8px 12px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 0.85rem; }
 .cart-label { white-space: nowrap; flex-shrink: 0; cursor: pointer; font-weight: 900; font-size: 0.9rem; }
 
-/* ─── Sale Countdown Banner ───────────────────────────────────────────────── */
+/* ─── Sale Countdown Banner ───────────────────────────────────────────────
+   White, translucent (Vanta shows through), same overall height as the
+   marquee below it. "SALE ENDS IN" sits to the left of the timer, read
+   left-to-right. Each unit is a solid black square: white number on top,
+   white HRS/MIN/SEC label directly under it, both inside that same box. */
 .sale-timer-banner {
     position: relative;
     overflow: hidden;
-    background: #111;
-    color: #fff;
-    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #111;
+    padding: 4px 16px;
     text-align: center;
     cursor: pointer;
     user-select: none;
     isolation: isolate;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 
 .sale-timer-flash-layer {
@@ -184,25 +201,19 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
     inset: 0;
     pointer-events: none;
     z-index: 1;
+    overflow: hidden;
 }
 
-.sale-timer-banner.sale-timer-flash-active {
-    background: linear-gradient(120deg, #111 0%, #337ab7 50%, #111 100%);
-    background-size: 200% 200%;
-    animation: saleTimerGradientShift 0.7s ease;
-}
-@keyframes saleTimerGradientShift {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
-}
-
+/* Water-drop ripple: blue-tinted, blurred, radial — reads as a droplet
+   splash rather than a flat circle. */
 .sale-timer-ripple {
     position: absolute;
     border-radius: 50%;
-    background: rgba(91, 192, 222, 0.45);
+    background: radial-gradient(circle, rgba(91, 192, 222, 0.55) 0%, rgba(91, 192, 222, 0.25) 45%, transparent 72%);
+    filter: blur(1px);
     transform: scale(0);
     pointer-events: none;
-    animation: saleTimerRippleAnim 0.9s ease-out forwards;
+    animation: saleTimerRippleAnim 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
 }
 @keyframes saleTimerRippleAnim {
     to { transform: scale(1); opacity: 0; }
@@ -212,63 +223,65 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
     position: relative;
     z-index: 2;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 12px;
 }
 
 .sale-timer-label {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     font-weight: 800;
-    letter-spacing: 2px;
-    color: #ddd;
+    letter-spacing: 1.5px;
+    color: #111;
+    white-space: nowrap;
 }
 
 .sale-timer-units {
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 8px;
-}
-
-.sale-timer-group {
-    display: flex;
-    flex-direction: column;
     align-items: center;
     gap: 4px;
 }
 
 .sale-timer-box {
     background: #000;
-    border: 1px solid #333;
-    border-radius: 6px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 7px;
+    line-height: 1;
+    min-width: 30px;
+}
+
+.sale-timer-num {
     color: #fff;
     font-weight: 800;
-    font-size: 1.3rem;
-    padding: 6px 10px;
-    min-width: 44px;
-    text-align: center;
+    font-size: 0.82rem;
+    line-height: 1.15;
     font-variant-numeric: tabular-nums;
 }
 
 .sale-timer-unit-label {
-    font-size: 0.6rem;
+    color: #fff;
+    font-size: 0.4rem;
     font-weight: 700;
-    letter-spacing: 1px;
-    color: #aaa;
+    letter-spacing: 0.6px;
+    line-height: 1.1;
 }
 
 .sale-timer-colon {
     font-weight: 800;
-    font-size: 1.3rem;
-    color: #fff;
-    align-self: center;
-    margin-top: -12px;
+    font-size: 0.82rem;
+    color: #111;
 }
 
 /* ─── Header Marquee Stripe ──────────────────────────────────────────────── */
 .header-marquee {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     color: #000;
     overflow: hidden;
     white-space: nowrap;
@@ -276,7 +289,7 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 .header-marquee-track {
     display: flex;
@@ -449,7 +462,7 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
 }
 .acme-opt-btn.active { background: #fff; color: #000; border-color: #fff; box-shadow: none; }
 
-/* ─── Tier / Bundle Pricing Cards (Chroma-style, light cards on dark PDP) ── */
+/* ─── Tier / Bundle Pricing Cards ─────────────────────────────────────────── */
 .tier-pricing-area {
     display: flex;
     flex-direction: column;
@@ -613,12 +626,7 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
 /* ─── Checkout Button ────────────────────────────────────────────────────── */
 #checkout-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ─── Footer ──────────────────────────────────────────────────────────────
-   Shorter transparent-to-black gradient zone (more "3D panel" feel — quick
-   depth cue rather than a long fade), plus a subtle top bevel and drop
-   shadow to read as a raised/layered surface. Hidden by default; fades in
-   + slides up via .footer-visible, toggled by an IntersectionObserver in
-   shop-script.js as the user scrolls it into/out of view. */
+/* ─── Footer ──────────────────────────────────────────────────────────────── */
 .acme-footer {
     margin-top: 0;
     padding: 40px 15px 28px;
@@ -683,8 +691,6 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
     }
 }
 
-/* Forces a real scroll before the footer is reachable, on both mobile and
-   desktop, regardless of how few products are in the grid. */
 #shop-main-content {
     min-height: 100vh;
     box-sizing: border-box;
@@ -735,10 +741,13 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #ff
         padding-left: 16px;
     }
 
-    .sale-timer-banner { padding: 12px 12px; }
-    .sale-timer-box { font-size: 1.05rem; padding: 5px 8px; min-width: 36px; }
-    .sale-timer-colon { font-size: 1.05rem; }
-    .sale-timer-label { font-size: 0.68rem; }
+    .sale-timer-banner { padding: 4px 10px; }
+    .sale-timer-label { font-size: 0.58rem; letter-spacing: 1px; }
+    .sale-timer-box { min-width: 26px; padding: 1px 5px; }
+    .sale-timer-num { font-size: 0.72rem; }
+    .sale-timer-unit-label { font-size: 0.34rem; }
+    .sale-timer-colon { font-size: 0.72rem; }
+    .sale-timer-inner { gap: 8px; }
 
     .header-marquee { font-size: 0.65rem; padding: 6px 0; }
     .marquee-phrase { padding: 0 22px; }
