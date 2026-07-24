@@ -7,7 +7,7 @@ let cart          = [];
 let activeP       = null;
 let selectedSize  = '';
 let selectedColor = '';
-let selectedTierQty = 2; // default to the "Buy 2" tier, matching the reference UI's default selection
+let selectedTierQty = 2;
 let curCat        = 'All';
 let curSort       = 'Relevance';
 let _cartJustOpened = false;
@@ -17,7 +17,7 @@ let _navCloseTimeoutId = null;
 const NAV_STAGGER_DELAY = 70;
 const NAV_ITEM_DURATION = 420;
 
-const SALE_TIMER_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
+const SALE_TIMER_DURATION_MS = 4 * 60 * 60 * 1000;
 const SALE_TIMER_STORAGE_KEY = 'hss_sale_timer_end';
 let _saleTimerIntervalId = null;
 
@@ -118,7 +118,6 @@ function getSaleTimerEnd() {
         return storedEnd;
     }
 
-    // Missing, invalid, or already expired — start a fresh 4-hour countdown.
     const newEnd = Date.now() + SALE_TIMER_DURATION_MS;
     localStorage.setItem(SALE_TIMER_STORAGE_KEY, String(newEnd));
     return newEnd;
@@ -129,7 +128,6 @@ function updateSaleTimerDisplay() {
     let remainingMs = endTime - Date.now();
 
     if (remainingMs <= 0) {
-        // Reset automatically — start the next 4-hour cycle immediately.
         endTime = Date.now() + SALE_TIMER_DURATION_MS;
         localStorage.setItem(SALE_TIMER_STORAGE_KEY, String(endTime));
         remainingMs = endTime - Date.now();
@@ -150,6 +148,22 @@ function updateSaleTimerDisplay() {
     if (secEl) secEl.textContent = pad(sec);
 }
 
+/**
+ * Spins the Vanta 3D background canvas itself (a real rotation of the
+ * canvas element) as the "click reaction" — separate from the water-drop
+ * ripple overlay on the banner. Since #canvas-container is a fixed,
+ * viewport-covering div over a solid black <body> background, the corners
+ * it exposes mid-rotation are seamlessly black — no visual artifacts.
+ */
+function triggerVantaSpin() {
+    const canvas = document.getElementById('canvas-container');
+    if (!canvas) return;
+    canvas.classList.remove('vanta-spin');
+    void canvas.offsetWidth; // restart the animation if clicked again quickly
+    canvas.classList.add('vanta-spin');
+    setTimeout(() => canvas.classList.remove('vanta-spin'), 1300);
+}
+
 function setupSaleTimer() {
     updateSaleTimerDisplay();
     if (_saleTimerIntervalId) clearInterval(_saleTimerIntervalId);
@@ -162,7 +176,7 @@ function setupSaleTimer() {
     banner.addEventListener('click', (e) => {
         const rect = banner.getBoundingClientRect();
         const ripple = document.createElement('span');
-        const size = Math.max(rect.width, rect.height) * 1.4;
+        const size = Math.max(rect.width, rect.height) * 1.8;
 
         ripple.className = 'sale-timer-ripple';
         ripple.style.width = size + 'px';
@@ -171,10 +185,9 @@ function setupSaleTimer() {
         ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
 
         flashLayer.appendChild(ripple);
-        banner.classList.add('sale-timer-flash-active');
-
         setTimeout(() => ripple.remove(), 900);
-        setTimeout(() => banner.classList.remove('sale-timer-flash-active'), 700);
+
+        triggerVantaSpin();
     });
 }
 
@@ -200,7 +213,7 @@ function setupHeaderMarquee() {
 function setupFooterScrollReveal() {
     const footer = document.getElementById('site-footer');
     if (!footer || !('IntersectionObserver' in window)) {
-        if (footer) footer.classList.add('footer-visible'); // fail-safe: always show if unsupported
+        if (footer) footer.classList.add('footer-visible');
         return;
     }
 
@@ -473,15 +486,28 @@ function getTierList(product) {
     ];
 }
 
-function renderTierPricing(product) {
+function computeDefaultTierQty(product) {
+    return product.remaining >= 2 ? 2 : 1;
+}
+
+/**
+ * FIX: this function used to reset selectedTierQty back to the computed
+ * default on EVERY call — including the call triggered from selectTier()
+ * itself. That meant clicking "Buy 1" or "Buy 3" would set the variable
+ * correctly for a split second, then this same function immediately
+ * overwrote it back to the default before the click even finished. Now
+ * the reset only happens when explicitly requested (resetSelection=true),
+ * which only happens once, when a product is first opened.
+ */
+function renderTierPricing(product, resetSelection) {
     const area = document.getElementById('tier-pricing-area');
     if (!area) return;
 
     const tiers = getTierList(product);
 
-    // Default selection: prefer tier 2 ("most popular") if enough stock,
-    // otherwise fall back to whatever the highest affordable tier is.
-    selectedTierQty = tiers.find(t => t.qty === 2 && product.remaining >= 2) ? 2 : 1;
+    if (resetSelection) {
+        selectedTierQty = computeDefaultTierQty(product);
+    }
 
     area.innerHTML = tiers.map((t) => {
         const savings = Math.max(0, t.original - t.total);
@@ -513,7 +539,7 @@ function renderTierPricing(product) {
 
 function selectTier(qty) {
     selectedTierQty = qty;
-    if (activeP) renderTierPricing(activeP);
+    if (activeP) renderTierPricing(activeP, false);
 }
 
 function renderPDP(product) {
@@ -555,7 +581,9 @@ function renderPDP(product) {
             </div>
         </div>` : ''}`;
 
-    renderTierPricing(activeP);
+    // Only reset the tier selection to the default when a NEW product is
+    // opened, not on every re-render.
+    renderTierPricing(activeP, true);
 
     const soldEl = document.getElementById('pdp-sold-count');
     if (soldEl) {
